@@ -36,6 +36,9 @@ jobs:
             postgres:16-alpine
           sleep 4
 
+      - name: Dar permisos de ejecución al Maven Wrapper
+        run: chmod +x ./mvnw
+
       - name: Ejecutar Tests Unitarios e Integración
         run: ./mvnw clean test
 
