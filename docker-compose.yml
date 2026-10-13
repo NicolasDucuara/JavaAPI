@@ -1,0 +1,60 @@
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Base de datos PostgreSQL
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: colordb_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-colordb}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-colordb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # ----------------------------------------------------------------------------
+  # 2. Aplicación Spring Boot
+  # ----------------------------------------------------------------------------
+  app:
+    build: .
+    image: ghcr.io/nicolasducuara/javaapi:latest
+    container_name: colordb_app
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 8080
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-colordb}
+      DB_USERNAME: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-123}
+    ports:
+      # Exponemos el puerto 8080 en el host para probar o para que Caddy conecte con él
+      - "8080:8080"
+    networks:
+      - app-network
+
+# ------------------------------------------------------------------------------
+# Volúmenes persistentes: los datos de PostgreSQL sobreviven reinicios y rebuilds
+# ------------------------------------------------------------------------------
+volumes:
+  postgres_data:
+
+# ------------------------------------------------------------------------------
+# Red privada interna entre los contenedores
+# ------------------------------------------------------------------------------
+networks:
+  app-network:
+    driver: bridge
