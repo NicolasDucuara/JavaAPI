@@ -74,6 +74,8 @@ document.addEventListener('DOMContentLoaded', function() {
             saludoEl.textContent = data.saludo;
             actualizarColor(data.color);
             nombreInput.value = '';
+            // Recargar el historial tras registrar un nuevo saludo
+            cargarHistorial();
         } catch (error) {
             alert('Hubo un error: ' + error.message);
         }
@@ -84,4 +86,31 @@ document.addEventListener('DOMContentLoaded', function() {
             saludarBtn.click();
         }
     });
+
+    // Cargar historial desde PostgreSQL (GET /historial)
+    const historialList = document.getElementById('historial-list');
+
+    async function cargarHistorial() {
+        try {
+            const res = await fetch('/historial');
+            if (!res.ok) return;
+            const items = await res.json();
+            historialList.innerHTML = '';
+            items.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>
+                        <span class="color-badge" style="background-color: ${item.color};"></span>
+                        <strong>${item.nombre}</strong>: ${item.mensaje}
+                    </span>
+                    <small style="opacity: 0.7;">${new Date(item.fechaHora).toLocaleTimeString()}</small>
+                `;
+                historialList.appendChild(li);
+            });
+        } catch (err) {
+            console.error('Error cargando historial:', err);
+        }
+    }
+
+    cargarHistorial();
 });

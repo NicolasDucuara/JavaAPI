@@ -31,3 +31,22 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Certificados y llaves criptográficas (Seguridad) ###
+*.p12
+*.jks
+*.key
+*.pem
+*.crt
+keystore.*
+
+### Variables de entorno y secretos locales ###
+.env
+.env.*
+application-local.properties
+application-secret.properties
+
+### Archivos de sistema y logs ###
+*.log
+.DS_Store
+Thumbs.db
